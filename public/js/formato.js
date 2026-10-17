@@ -125,6 +125,7 @@ export function normalizarPrediccion(cuerpo) {
     motivo: p.motivo ?? null,
     versionModelo: p.version_modelo ?? p.modelo_version ?? p.version ?? null,
     fecha: p.fecha ?? p.creado_en ?? null,
+    atendidoPor: p.atendido_por ?? null,
     recomendaciones: recomendaciones
       .map((r, i) => ({
         puesto: Number(r.puesto ?? i + 1),

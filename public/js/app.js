@@ -120,6 +120,7 @@ function mostrarPrediccion(p, usuarioId, ms) {
   $("d-latencia").textContent = `${ms} ms`;
   $("d-id").textContent = p.id !== null && p.id !== undefined ? `Predicción ${p.id}` : "No guardada";
   $("d-fecha").textContent = p.fecha ? formatearFecha(p.fecha) : formatearFecha(new Date().toISOString());
+  $("d-replica").textContent = p.atendidoPor ?? "No informada";
 }
 
 function pintarGondola(recomendaciones, esModelo) {
