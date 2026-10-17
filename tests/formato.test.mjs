@@ -65,8 +65,9 @@ test("normaliza la respuesta de la IA tal como la entrega hoy", () => {
 });
 
 test("normaliza la respuesta del dominio (plana o envuelta)", () => {
-  const plana = normalizarPrediccion({ id: 7, version_modelo: "hgb-a1b2c3d", fecha: "2026-10-14T20:00:00Z", origen: "fallback", motivo: "x", recomendaciones: [] });
+  const plana = normalizarPrediccion({ id: 7, version_modelo: "hgb-a1b2c3d", fecha: "2026-10-14T20:00:00Z", origen: "fallback", motivo: "x", recomendaciones: [], atendido_por: "a1b2c3d4e5f6" });
   assert.equal(plana.id, 7);
+  assert.equal(plana.atendidoPor, "a1b2c3d4e5f6");
   assert.equal(plana.versionModelo, "hgb-a1b2c3d");
   const envuelta = normalizarPrediccion({ id: 8, prediccion: { origen: "modelo", recomendaciones: [{ sku: "A" }] } });
   assert.equal(envuelta.id, 8);
