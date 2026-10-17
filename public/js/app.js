@@ -119,7 +119,7 @@ function mostrarPrediccion(p, usuarioId, ms) {
   $("d-version").textContent = p.versionModelo ?? "No informada";
   $("d-latencia").textContent = `${ms} ms`;
   $("d-id").textContent = p.id !== null && p.id !== undefined ? `Predicción ${p.id}` : "No guardada";
-  $("d-fecha").textContent = p.fecha ? formatearFecha(p.fecha) : formatearFecha(new Date().toISOString());
+  $("d-fecha").textContent = p.fecha ? formatearFecha(p.fecha) : "No informada";
   $("d-replica").textContent = p.atendidoPor ?? "No informada";
 }
 
@@ -197,9 +197,11 @@ async function cargarContexto(usuarioId) {
     } else {
       const ul = el("ul", { class: "historial" });
       filas.forEach((p) => {
+        const claseOrigen = p.origen === "modelo" || p.origen === "fallback" ? p.origen : "desconocido";
+        const textoOrigen = p.origen === "modelo" ? "Modelo" : p.origen === "fallback" ? "Plan B" : `(${p.origen})`;
         ul.append(el("li", {},
           el("span", { class: "h-fecha" }, p.fecha ? formatearFecha(p.fecha) : "Sin fecha"),
-          el("span", { class: `h-origen ${p.origen}` }, p.origen === "modelo" ? "Modelo" : "Plan B"),
+          el("span", { class: `h-origen ${claseOrigen}` }, textoOrigen),
           el("span", { class: "h-version" }, p.versionModelo ?? ""),
         ));
       });
@@ -299,4 +301,17 @@ function primeraMayuscula(t) {
   return String(t).charAt(0).toUpperCase() + String(t).slice(1);
 }
 
-iniciar();
+// Si algo falla al arrancar (por ejemplo, un elemento del HTML cambió de id),
+// se muestra un aviso visible en vez de quedar la página muerta en silencio.
+iniciar().catch((e) => {
+  const aviso = document.createElement("div");
+  aviso.className = "error-arranque";
+  aviso.setAttribute("role", "alert");
+  const titulo = document.createElement("p");
+  titulo.textContent = "La página no se pudo iniciar. Vuelve a cargarla y revisa que el HTML y el JavaScript sean de la misma versión.";
+  const detalle = document.createElement("p");
+  detalle.className = "detalle";
+  detalle.textContent = `Detalle técnico: ${e && e.message ? e.message : e}`;
+  aviso.append(titulo, detalle);
+  document.body.append(aviso);
+});

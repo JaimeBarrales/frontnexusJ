@@ -72,6 +72,10 @@ En las tres se acepta también un objeto `{"items": [...]}`.
 
 Nginx genera `/config.json` al arrancar a partir de esta variable (plantilla en `nginx/default.conf.template`), así que se cambia en el `compose.yaml` sin reconstruir la imagen. El `compose.yaml` funciona sin definirla.
 
+### Caché de CSS y JS
+
+`index.html` carga los archivos con `?v=<versión>` (la misma que `package.json`). Nginx los sirve con `expires 1h`; al subir el `?v=` el navegador descarga la nueva versión aunque el caché esté vigente. **Al publicar una corrección en JS o CSS: subir la `version` de `package.json` y los dos `?v=` de `index.html`.**
+
 ## Servicio en el `compose.yaml` de la defensa
 
 ```yaml
