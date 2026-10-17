@@ -1,0 +1,49 @@
+# Front de Nexus Retail: sirve archivos estáticos en el puerto 80 de la red interna.
+# No publica puertos hacia el host: el gateway reenvía "/" a front:80.
+#
+# Es una plantilla: al arrancar, la imagen oficial de Nginx reemplaza ${RUTA_PREDICCION}
+# (solo las variables de entorno definidas; $uri y demás variables de Nginx quedan intactas)
+# y escribe el resultado en /etc/nginx/conf.d/default.conf.
+
+server {
+    listen 80;
+    server_name _;
+    server_tokens off;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log warn;
+
+    # Cabeceras de seguridad. Solo se admite contenido del mismo origen (el gateway).
+    add_header Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Frame-Options "DENY" always;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # Healthcheck del contenedor (lo usa HEALTHCHECK y el compose).
+    location = /health {
+        access_log off;
+        default_type application/json;
+        return 200 '{"status":"ok","service":"front"}';
+    }
+
+    # Configuración que lee el navegador al cargar. Se cambia con variables de entorno, sin reconstruir la imagen.
+    location = /config.json {
+        default_type application/json;
+        expires -1;
+        return 200 '{"rutaPrediccion":"${RUTA_PREDICCION}"}';
+    }
+
+    location ~* \.(css|js|woff2)$ {
+        expires 1h;
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

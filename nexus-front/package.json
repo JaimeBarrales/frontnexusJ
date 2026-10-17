@@ -1,0 +1,9 @@
+{
+  "name": "nexus-front",
+  "private": true,
+  "description": "Front del recomendador de Nexus Retail (EP2 ITY1102). Sin dependencias: HTML, CSS y JavaScript servidos por Nginx.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  }
+}

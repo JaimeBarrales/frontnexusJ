@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recomendador Nexus</title>
+  <meta name="description" content="Pide recomendaciones de productos para un cliente de Nexus Retail.">
+  <link rel="preload" href="/fuentes/archivo.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/estilos.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314213A'/%3E%3Crect x='6' y='12' width='20' height='13' rx='2' fill='%23FFD43B'/%3E%3C/svg%3E">
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <header class="barra">
+    <p class="marca">Nexus Retail <span>Recomendador</span></p>
+    <ul class="servicios" id="servicios" aria-label="Estado de los servicios">
+      <li data-servicio="gateway"><span class="punto" aria-hidden="true"></span>Gateway <span class="estado">revisando</span></li>
+      <li data-servicio="dominio"><span class="punto" aria-hidden="true"></span>Dominio <span class="estado">revisando</span></li>
+      <li data-servicio="ia"><span class="punto" aria-hidden="true"></span>Modelo <span class="estado">revisando</span></li>
+    </ul>
+  </header>
+
+  <main>
+    <section class="pedido" aria-labelledby="titulo">
+      <h1 id="titulo">¿Qué productos le mostramos a este cliente?</h1>
+      <p class="bajada">Escribe el código del cliente y elige cuántos productos quieres en la vitrina. El modelo los ordena según la probabilidad de que los compre.</p>
+
+      <form id="formulario" class="formulario" novalidate>
+        <div class="campo">
+          <label for="usuario">Código del cliente</label>
+          <input id="usuario" name="usuario" list="clientes" placeholder="U100406" autocomplete="off" spellcheck="false" required maxlength="40">
+          <datalist id="clientes"></datalist>
+        </div>
+
+        <fieldset class="campo cantidad">
+          <legend>Productos en la vitrina</legend>
+          <div class="opciones">
+            <label><input type="radio" name="k" value="4"><span>4</span></label>
+            <label><input type="radio" name="k" value="5"><span>5</span></label>
+            <label><input type="radio" name="k" value="6"><span>6</span></label>
+            <label><input type="radio" name="k" value="7"><span>7</span></label>
+            <label><input type="radio" name="k" value="8" checked><span>8</span></label>
+          </div>
+        </fieldset>
+
+        <button type="submit" id="boton">Recomendar productos</button>
+      </form>
+
+      <p class="mensaje-campo" id="mensaje-campo" role="alert" hidden></p>
+
+      <div class="ejemplos" id="ejemplos" hidden>
+        <p>Clientes para probar</p>
+        <div class="lista-ejemplos" id="lista-ejemplos"></div>
+      </div>
+    </section>
+
+    <section class="vitrina" id="vitrina" aria-labelledby="titulo-vitrina" aria-live="polite" aria-busy="false">
+      <div class="cabecera-vitrina">
+        <h2 id="titulo-vitrina">Vitrina</h2>
+        <p class="subtitulo" id="subtitulo-vitrina">Todavía no hay recomendaciones. Elige un cliente para llenarla.</p>
+      </div>
+
+      <div class="aviso" id="aviso" hidden>
+        <p class="aviso-titulo" id="aviso-titulo"></p>
+        <p class="aviso-detalle" id="aviso-detalle"></p>
+        <p class="aviso-tecnico" id="aviso-tecnico"></p>
+        <button type="button" class="reintentar" id="reintentar">Intentar de nuevo</button>
+      </div>
+
+      <ol class="gondola" id="gondola" aria-label="Productos recomendados, del más al menos probable">
+        <li class="etiqueta vacia" aria-hidden="true"></li>
+        <li class="etiqueta vacia" aria-hidden="true"></li>
+        <li class="etiqueta vacia" aria-hidden="true"></li>
+        <li class="etiqueta vacia" aria-hidden="true"></li>
+      </ol>
+
+      <dl class="detalle" id="detalle" hidden>
+        <div><dt>Origen</dt><dd id="d-origen"></dd></div>
+        <div><dt>Versión del modelo</dt><dd id="d-version"></dd></div>
+        <div><dt>Tiempo de respuesta</dt><dd id="d-latencia"></dd></div>
+        <div><dt>Guardada como</dt><dd id="d-id"></dd></div>
+        <div><dt>Fecha</dt><dd id="d-fecha"></dd></div>
+      </dl>
+    </section>
+
+    <section class="contexto" id="contexto" hidden aria-label="Datos del cliente">
+      <article class="panel">
+        <h2>Lo que ya compró</h2>
+        <p class="panel-nota">El modelo no vuelve a recomendar estos productos.</p>
+        <div id="compras"></div>
+      </article>
+      <article class="panel">
+        <h2>Recomendaciones anteriores</h2>
+        <p class="panel-nota">Las guarda el servicio de dominio en la base de datos.</p>
+        <div id="historial"></div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p>Todas las peticiones pasan por el gateway. Ruta de recomendación: <code id="ruta-prediccion">/api/dominio/predicciones</code></p>
+  </footer>
+</body>
+</html>
