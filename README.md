@@ -76,7 +76,7 @@ Nginx genera `/config.json` al arrancar a partir de esta variable (plantilla en 
 
 ```yaml
   front:
-    image: ghcr.io/<cuenta>/nexus-front:ep2
+    image: ghcr.io/jaimebarrales/nexus-front:ep2
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
@@ -108,13 +108,13 @@ sh tests/humo.sh nexus-front:prueba # imagen: healthy, rutas, config.json, CSP (
 | Evento | Qué hace |
 |---|---|
 | Pull request hacia `dev` o `main` | Tests, build y prueba de humo, sin publicar |
-| Push a `main` | Lo mismo y publica `ghcr.io/<cuenta>/nexus-front` con `sha-<commit>` y `latest` |
+| Push a `main` | Lo mismo y publica `ghcr.io/jaimebarrales/nexus-front` con `sha-<commit>` y `latest` |
 | Tag `ep2` sobre `main` | Publica la misma imagen con el tag `ep2` |
 
 `docker/metadata-action` agrega la etiqueta `org.opencontainers.image.revision`. Para ver qué commit está corriendo:
 
 ```bash
-docker image inspect ghcr.io/<cuenta>/nexus-front:ep2 --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}'
+docker image inspect ghcr.io/jaimebarrales/nexus-front:ep2 --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}'
 ```
 
 Después de la primera publicación, el paquete queda privado: hay que hacerlo público en GitHub, en Packages, `nexus-front`, Package settings, Change visibility.

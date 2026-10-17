@@ -1,0 +1,15 @@
+.git
+.github
+.gitignore
+*.md
+tests
+node_modules
+.env
+.env.*
+compose*.yaml
+compose*.yml
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.log
