@@ -1,7 +1,7 @@
 # Pipeline del front (sección 2.5 del enunciado):
 #   pull request hacia dev o main -> tests + build de la imagen, SIN publicar
 #   push a main (merge desde dev) -> tests + build + publicación en GHCR con sha-<commit> y latest
-#   tag ep2 sobre main             -> publica la misma imagen con el tag ep2 (el que usa el compose.yaml)
+#   tag ep2/ep3 sobre main         -> publica la misma imagen con el tag de entrega
 name: ci
 
 on:
@@ -9,7 +9,7 @@ on:
     branches: [dev, main]
   push:
     branches: [main]
-    tags: [ep2]
+    tags: [ep2, ep3]
 
 permissions:
   contents: read
