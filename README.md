@@ -8,7 +8,7 @@ Es una página estática (HTML, CSS y JavaScript sin frameworks ni dependencias)
 
 - **Flujo principal:** el usuario escribe el código de un cliente, elige cuántos productos quiere (4 a 8) y ve las recomendaciones ordenadas como etiquetas de precio en una góndola. Debajo aparecen el origen (modelo o plan B), la versión del modelo, el tiempo de respuesta, el id con que se guardó la predicción y la fecha.
 - **Plan B visible:** si la IA responde `origen: "fallback"`, las etiquetas pasan de amarillo a blanco y se muestra el `motivo`.
-- **Estado de los servicios:** cada 5 segundos consulta `/health` del gateway, del dominio y de la IA, y lo muestra arriba a la derecha (en línea, caído, sin modelo o lento). Sirve para la pregunta del IE4: al detener una réplica o la IA, se ve en la pantalla.
+- **Estado de los servicios:** cada 5 segundos consulta `/health` del gateway, del dominio y de la IA, y lo muestra arriba a la derecha: `en línea`, `sin modelo` (respuesta 503), `lento` (504), `caído` (502) o `sin respuesta` (cualquier otro código, o sin respuesta HTTP). Sirve para la pregunta del IE4: al detener una réplica o la IA, se ve en la pantalla. Ojo con la etiqueta `sin modelo`: se aplica al 503 de los tres servicios, y en el dominio el 503 significa que la base de datos no responde.
 - **Errores del gateway traducidos:** el 502 `servicio_no_disponible`, el 504 `tiempo_de_espera_agotado`, el 404 `ruta_no_encontrada`, el 503 y el 422 se muestran con un mensaje claro y el detalle técnico (código y servicio).
 - **Datos del cliente (opcional):** si el dominio los entrega, muestra sus compras anteriores y sus recomendaciones anteriores. Si esas rutas no existen todavía, el panel dice "No disponible" y el flujo principal sigue funcionando.
 - Se puede abrir con `http://localhost:8080/?cliente=U100406` para que haga la petición al cargar.
@@ -38,7 +38,7 @@ Entrada (la misma que recibe la IA):
 { "usuario_id": "U100406", "k": 8 }
 ```
 
-Respuesta esperada: la respuesta de la IA más tres campos que agrega el dominio (`id`, `fecha`, `version_modelo`):
+Respuesta esperada: la respuesta de la IA más los campos que agrega el dominio (`id`, `fecha`, `version_modelo`, `atendido_por`, `ia_ms`, `total_ms`):
 
 ```json
 {
@@ -54,7 +54,7 @@ Respuesta esperada: la respuesta de la IA más tres campos que agrega el dominio
 }
 ```
 
-El front también acepta la predicción envuelta (`{"id": 42, "prediccion": {...}}`) y los nombres `modelo_version` o `version` en vez de `version_modelo`. Si la IA no responde, el dominio debería devolver un **503** con `{"detail": "El servicio de IA no responde"}`: el front muestra ese texto.
+El front también acepta la predicción envuelta (`{"id": 42, "prediccion": {...}}`) y los nombres `modelo_version` o `version` en vez de `version_modelo`. La interfaz mantiene la ruta compatible `/api/dominio/predicciones` (201); EP3 expone además `/api/predict` (200) con la misma respuesta persistida. Si la IA no responde, el dominio entrega `origen: "fallback"` y su lista de más vendidos. El **503** aparece cuando la base de datos del dominio no responde, y el front muestra su `detail`.
 
 **Rutas opcionales:**
 
