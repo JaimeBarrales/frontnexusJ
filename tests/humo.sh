@@ -40,6 +40,7 @@ revisar() {  # revisar <nombre> <ruta> <texto esperado en la respuesta>
 revisar "GET / entrega la página"                    "/"                    "Recomendar productos"
 revisar "GET /health responde JSON"                  "/health"              '"service":"front"'
 revisar "GET /config.json trae la ruta por defecto"  "/config.json"         '/api/dominio/predicciones'
+revisar "GET /config.json trae la ruta de campañas"  "/config.json"         '/api/campanas'
 revisar "GET /js/app.js existe"                      "/js/app.js"           "pedirPrediccion"
 revisar "GET /css/estilos.css existe"                "/css/estilos.css"     "gondola"
 revisar "Una ruta desconocida vuelve al index"       "/cualquier/cosa"      "Recomendar productos"
@@ -53,9 +54,10 @@ fi
 
 # La ruta se cambia con una variable de entorno, sin reconstruir la imagen.
 docker rm -f "$NOMBRE" >/dev/null
-docker run -d --name "$NOMBRE" --network "$RED" --network-alias front -e RUTA_PREDICCION=/api/ia/predict "$IMAGEN" >/dev/null
+docker run -d --name "$NOMBRE" --network "$RED" --network-alias front -e RUTA_PREDICCION=/api/ia/predict -e RUTA_CAMPANAS=/api/dominio/campanas "$IMAGEN" >/dev/null
 sleep 2
 revisar "RUTA_PREDICCION cambia config.json" "/config.json" '/api/ia/predict'
+revisar "RUTA_CAMPANAS cambia config.json"   "/config.json" '/api/dominio/campanas'
 
 if [ "$FALLAS" -gt 0 ]; then
   echo "Fallaron $FALLAS pruebas"; exit 1

@@ -12,6 +12,37 @@ Es una página estática (HTML, CSS y JavaScript sin frameworks ni dependencias)
 - **Errores del gateway traducidos:** el 502 `servicio_no_disponible`, el 504 `tiempo_de_espera_agotado`, el 404 `ruta_no_encontrada`, el 503 y el 422 se muestran con un mensaje claro y el detalle técnico (código y servicio).
 - **Datos del cliente (opcional):** si el dominio los entrega, muestra sus compras anteriores y sus recomendaciones anteriores. Si esas rutas no existen todavía, el panel dice "No disponible" y el flujo principal sigue funcionando.
 - Se puede abrir con `http://localhost:8080/?cliente=U100406` para que haga la petición al cargar.
+- **Campaña con LLM (EP3):** ver la sección siguiente.
+
+## Campaña con LLM (EP3)
+
+Después de recomendar productos aparece la sección **«Campaña para este cliente»** con el botón **Generar campaña**. El navegador **nunca llama al LLM**: el texto lo arma un worker en segundo plano a partir de datos anonimizados (tarea 1, en `nexus-dominio`).
+
+```text
+Generar campaña ──POST /api/campanas/{usuario}──▶ dominio ──▶ RabbitMQ ──▶ worker ──▶ LLM
+        │                  202 {"id": 7, "estado": "pendiente"}                 │
+        └── cada 2 s ──GET /api/campanas/7──▶ dominio ◀── PostgreSQL (campanas) ◀┘
+```
+
+| Estado que devuelve el dominio | Qué muestra el front |
+|---|---|
+| `pendiente` | Etiqueta amarilla **Pendiente…** y los segundos que lleva en la cola |
+| `listo` | Etiqueta verde **Lista** y el texto generado, con modelo, intentos y tiempo |
+| `error` **con** `texto` (modo degradado) | Etiqueta naranja **Texto de respaldo**, aviso «Modo degradado» con el `motivo_error` y el texto de respaldo marcado como genérico |
+| `error` sin `texto` | Etiqueta roja **Error** y el `motivo_error` |
+
+La pantalla **nunca queda colgada**:
+
+- Si el worker no termina en 90 s, se deja de consultar y se avisa «La campaña sigue en la cola»; el botón vuelve a quedar disponible.
+- Un 429 o 5xx al consultar se reintenta en la siguiente vuelta; un 401, 404 o 422 corta de inmediato con el mensaje del error.
+- Si el `POST` falla (por ejemplo, 404 porque el gateway todavía no tiene `/api/campanas`), se muestra el error y **la vitrina de recomendaciones no se toca**.
+- Si se cambia de cliente mientras una campaña espera, la respuesta vieja se descarta.
+
+Campos que lee (los de la tabla `campanas`): `id`, `estado`, `texto`, `motivo_error`, `modelo_llm`, `intentos`. Para el id del `202` acepta también `campana_id` o `trabajo_id`, y el estado `degradado` se trata como `error` con texto.
+
+### Clave de API (tarea 2)
+
+Abajo en la página hay un campo **Clave de API**. Si se escribe, el front la envía en la cabecera `X-API-Key` en la predicción y en las campañas; si está vacío, no envía la cabecera (así funciona igual antes de que la tarea 2 esté fusionada). La clave queda solo en `sessionStorage` de esa pestaña: nunca va en el código, en la imagen ni en `config.json`. Un `401` muestra «Falta la clave de API o no es válida» y un `429` «Demasiadas peticiones seguidas».
 
 ## Rutas que usa (todas pasan por el gateway)
 
@@ -25,6 +56,8 @@ Es una página estática (HTML, CSS y JavaScript sin frameworks ni dependencias)
 | GET | `/api/dominio/usuarios?limite=6` | no | Botones con clientes de ejemplo |
 | GET | `/api/dominio/usuarios/{id}/compras?limite=8` | no | Panel "Lo que ya compró" |
 | GET | `/api/dominio/predicciones?usuario_id={id}&limite=5` | no | Panel "Recomendaciones anteriores" |
+| POST | `/api/campanas/{usuario}` | no | Pide una campaña con LLM (responde 202) |
+| GET | `/api/campanas/{id}` | no | Estado de la campaña: `pendiente`, `listo` o `error` |
 
 ## Contrato con el microservicio de dominio
 
@@ -69,8 +102,9 @@ En las tres se acepta también un objeto `{"items": [...]}`.
 | Variable | Valor por defecto | Para qué |
 |---|---|---|
 | `RUTA_PREDICCION` | `/api/dominio/predicciones` | Ruta del flujo principal. Para probar el front mientras el dominio no existe se puede usar `/api/ia/predict` (la predicción no se guarda). |
+| `RUTA_CAMPANAS` | `/api/campanas` | Base de las rutas de campañas. Si el gateway aún no enruta `/api/campanas`, se puede usar `/api/dominio/campanas` (la ruta genérica del dominio). |
 
-Nginx genera `/config.json` al arrancar a partir de esta variable (plantilla en `nginx/default.conf.template`), así que se cambia en el `compose.yaml` sin reconstruir la imagen. El `compose.yaml` funciona sin definirla.
+Nginx genera `/config.json` al arrancar a partir de estas variables (plantilla en `nginx/default.conf.template`), así que se cambia en el `compose.yaml` sin reconstruir la imagen. El `compose.yaml` funciona sin definirla.
 
 ### Caché de CSS y JS
 
@@ -103,7 +137,7 @@ Sin `build:`, sin `ports:` y sin bind mounts, como pide la sección 2.3.
 ## Pruebas
 
 ```bash
-node --test tests/*.test.mjs        # lógica: formato, validación, errores del gateway, llamadas HTTP
+node --test tests/*.test.mjs        # lógica: formato, validación, errores del gateway, llamadas HTTP, campañas y clave
 sh tests/humo.sh nexus-front:prueba # imagen: healthy, rutas, config.json, CSP (requiere Docker)
 ```
 
