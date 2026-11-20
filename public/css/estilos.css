@@ -615,3 +615,112 @@ h1 {
   .etiqueta::before { left: -5px; right: -5px; }
   .detalle { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* ------------------------------------------------------------------ campaña (LLM) */
+
+.campana {
+  margin-top: 40px;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+  padding: 20px 22px;
+}
+
+.cabecera-campana {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.campana h2 { font-size: 1.125rem; font-weight: 700; }
+.campana .panel-nota { max-width: 70ch; }
+
+.boton-secundario {
+  flex: none;
+  border: 2px solid var(--accion);
+  background: var(--papel);
+  color: var(--accion);
+  border-radius: var(--radio);
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boton-secundario:hover:not(:disabled) { background: var(--accion); color: var(--papel); }
+.boton-secundario:disabled { opacity: 0.6; cursor: progress; }
+
+.estado-campana {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--tinta-suave);
+}
+
+.chip {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e4e8ee;
+  color: var(--tinta);
+}
+
+.chip.ok { background: var(--ok); color: var(--papel); }
+.chip.alerta { background: var(--alerta); color: var(--papel); }
+.chip.error { background: var(--error); color: var(--papel); }
+.chip.pendiente { background: var(--etiqueta); }
+.chip.pendiente::after { content: "…"; }
+
+.campana .aviso { margin-top: 14px; }
+
+.texto-campana {
+  margin: 16px 0 0;
+  padding: 16px 18px;
+  border-left: 4px solid var(--etiqueta);
+  background: #fbfaf3;
+  border-radius: var(--radio);
+  white-space: pre-line;
+  line-height: 1.55;
+  max-width: 80ch;
+}
+
+.texto-campana.respaldo { border-left-color: var(--alerta); background: #fbf6ee; }
+
+/* ------------------------------------------------------------------ clave de API (pie) */
+
+.clave {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.clave label span { color: var(--tinta-suave); }
+
+.clave input {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  width: 16rem;
+  max-width: 100%;
+}
+
+.clave button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--tinta);
+  background: transparent;
+  border-radius: var(--radio);
+  cursor: pointer;
+}
+
+@media (max-width: 620px) {
+  .cabecera-campana { flex-direction: column; }
+  .boton-secundario { width: 100%; }
+}
