@@ -115,7 +115,7 @@ Nginx genera `/config.json` al arrancar a partir de estas variables (plantilla e
 
 ### Caché de CSS y JS
 
-`index.html` carga los archivos con `?v=<versión>` (la misma que `package.json`). Nginx los sirve con `expires 1h`; al subir el `?v=` el navegador descarga la nueva versión aunque el caché esté vigente. **Al publicar una corrección en JS o CSS: subir la `version` de `package.json` y los dos `?v=` de `index.html`.**
+`index.html` carga los archivos con `?v=<versión>` (la misma que `package.json`). Nginx los sirve con `expires 1h`; al subir el `?v=` el navegador descarga la nueva versión aunque el caché esté vigente. **Al publicar una corrección en JS o CSS: subir la `version` de `package.json`, los dos `?v=` de `index.html` y los `?v=` de los `import` de `public/js/app.js`.** Los imports entre módulos también llevan versión: si no, el navegador puede combinar un `app.js` nuevo con un `formato.js` viejo de su caché y la página no arranca. `tests/version.test.mjs` falla si alguna versión no coincide.
 
 ## Servicio en el `compose.yaml` de la defensa
 
