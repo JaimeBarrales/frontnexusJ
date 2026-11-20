@@ -1,22 +1,42 @@
-import { RUTAS, cargarConfig, pedir, pedirPrediccion } from "./api.js";
+import { RUTAS, cargarConfig, esperarCampana, guardarClave, leerClave, pedir, pedirCampana, pedirPrediccion } from "./api.js?v=1.2.1";
 import {
   describirError,
+  describirEstadoCampana,
   escalarPuntajes,
   formatearFecha,
   formatearPrecio,
+  normalizarCampana,
   normalizarPrediccion,
   validarEntrada,
-} from "./formato.js";
+} from "./formato.js?v=1.2.1";
 
 const $ = (id) => document.getElementById(id);
 const INTERVALO_SALUD_MS = 5000;
 
 let config = null;
 let ultimaPeticion = null;
+let clave = "";
+// Cada pedido de campaña sube este número; una espera vieja que termina tarde no pisa la pantalla.
+let turnoCampana = 0;
+let clienteCampana = null;
 
 async function iniciar() {
   config = await cargarConfig();
   $("ruta-prediccion").textContent = config.rutaPrediccion;
+  $("ruta-campanas").textContent = config.rutaCampanas;
+
+  clave = leerClave();
+  $("clave-estado").textContent = clave ? "Clave guardada en esta pestaña." : "";
+  $("form-clave").addEventListener("submit", (e) => {
+    e.preventDefault();
+    clave = guardarClave($("clave").value);
+    $("clave").value = "";
+    $("clave-estado").textContent = clave ? "Clave guardada en esta pestaña." : "Sin clave.";
+  });
+
+  $("boton-campana").addEventListener("click", () => {
+    if (clienteCampana) generarCampana(clienteCampana);
+  });
 
   $("formulario").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -56,7 +76,7 @@ async function recomendar(usuarioIdCrudo, kCrudo) {
   ultimaPeticion = entrada;
 
   ocupado(true);
-  const r = await pedirPrediccion(config, entrada.usuarioId, entrada.k);
+  const r = await pedirPrediccion(config, entrada.usuarioId, entrada.k, fetch, clave);
   ocupado(false);
 
   if (!r.ok) {
@@ -64,6 +84,7 @@ async function recomendar(usuarioIdCrudo, kCrudo) {
     return;
   }
   mostrarPrediccion(normalizarPrediccion(r.cuerpo), entrada.usuarioId, r.ms);
+  prepararCampana(entrada.usuarioId);
   cargarContexto(entrada.usuarioId);
 
   const url = new URL(location.href);
@@ -156,6 +177,128 @@ function pintarGondola(recomendaciones, esModelo) {
 function pintarVacia(n) {
   const gondola = $("gondola");
   gondola.replaceChildren(...Array.from({ length: n }, () => el("li", { class: "etiqueta vacia", "aria-hidden": "true" })));
+}
+
+// ------------------------------------------------------------------ campaña con LLM (por cola)
+// La predicción ya se mostró: la campaña es aparte y nunca bloquea ni rompe la vitrina.
+
+function prepararCampana(usuarioId) {
+  if (clienteCampana === usuarioId) return;
+  clienteCampana = usuarioId;
+  turnoCampana++; // descarta una espera en curso de otro cliente
+  $("campana").hidden = false;
+  $("titulo-campana").textContent = `Campaña para ${usuarioId}`;
+  $("boton-campana").disabled = false;
+  $("boton-campana").textContent = "Generar campaña";
+  pintarEstadoCampana(null, "");
+  $("aviso-campana").hidden = true;
+  $("texto-campana").hidden = true;
+}
+
+async function generarCampana(usuarioId) {
+  const turno = ++turnoCampana;
+  const vigente = () => turno === turnoCampana;
+  $("boton-campana").disabled = true;
+  $("boton-campana").textContent = "Generando…";
+  $("aviso-campana").hidden = true;
+  $("texto-campana").hidden = true;
+  pintarEstadoCampana({ estado: "pendiente" }, "Enviando el pedido…");
+
+  try {
+    const r = await pedirCampana(config, usuarioId, { clave });
+    if (!vigente()) return;
+    const inicial = r.ok ? normalizarCampana(r.cuerpo) : null;
+    if (!r.ok || inicial.id === null) {
+      const e = r.ok
+        ? { titulo: "El dominio no devolvió un identificador", detalle: "No se puede consultar el estado sin el id del trabajo.", tecnico: `${r.estado}: ${JSON.stringify(r.cuerpo).slice(0, 160)}` }
+        : describirError(r.estado, r.cuerpo, "dominio");
+      pintarEstadoCampana(null, "");
+      avisoCampana("error", e.titulo, e.detalle, e.tecnico);
+      return;
+    }
+
+    const inicio = performance.now();
+    pintarEstadoCampana(inicial, `Trabajo ${inicial.id} en la cola (aceptado en ${r.ms} ms).`);
+    const resultado = await esperarCampana(config, inicial.id, {
+      clave,
+      normalizar: normalizarCampana,
+      alCambiar: (c) => {
+        if (vigente() && c.estado === "pendiente") {
+          const s = Math.round((performance.now() - inicio) / 1000);
+          pintarEstadoCampana(c, `Trabajo ${c.id ?? inicial.id}: esperando al worker (${s} s).`);
+        }
+      },
+    });
+    if (vigente()) mostrarCampana(resultado, inicial.id, Math.round(performance.now() - inicio));
+  } catch (e) {
+    // Cualquier fallo inesperado deja la pantalla en un estado claro, nunca colgada.
+    if (vigente()) {
+      pintarEstadoCampana(null, "");
+      avisoCampana("error", "No se pudo completar la campaña", "Ocurrió un error inesperado en la página.", String(e?.message ?? e));
+    }
+  } finally {
+    if (vigente()) {
+      $("boton-campana").disabled = false;
+      $("boton-campana").textContent = "Generar otra vez";
+    }
+  }
+}
+
+function mostrarCampana(resultado, id, msEspera) {
+  const c = resultado.campana;
+  const segundos = (msEspera / 1000).toFixed(1);
+
+  if (!resultado.final) {
+    pintarEstadoCampana(c, `Trabajo ${id}`);
+    if (resultado.motivo === "consulta") {
+      const e = describirError(resultado.respuesta.estado, resultado.respuesta.cuerpo, "dominio");
+      avisoCampana("error", `No se pudo consultar la campaña: ${e.titulo.toLowerCase()}`, e.detalle, e.tecnico);
+    } else {
+      avisoCampana("fallback", "La campaña sigue en la cola",
+        `Pasaron ${segundos} s sin respuesta del worker. Puede estar ocupado o detenido; pulsa «Generar otra vez» más tarde.`,
+        "estado pendiente al agotar la espera del navegador");
+    }
+    return;
+  }
+
+  const extra = [c.modelo, c.intentos !== null ? `${c.intentos} intento${c.intentos === 1 ? "" : "s"}` : null, `${segundos} s`]
+    .filter(Boolean).join(" · ");
+  pintarEstadoCampana(c, `Trabajo ${c.id ?? id} · ${extra}`);
+
+  if (c.estado === "listo") {
+    $("aviso-campana").hidden = true;
+  } else if (c.degradado) {
+    avisoCampana("fallback", "Modo degradado: se muestra un texto de respaldo",
+      "El LLM no respondió después de los reintentos. El texto de abajo es genérico, no lo redactó el LLM.",
+      c.motivo ? `motivo: ${c.motivo}` : "");
+  } else {
+    avisoCampana("error", "No se pudo generar la campaña",
+      "El worker terminó con error y no dejó texto de respaldo.",
+      c.motivo ? `motivo: ${c.motivo}` : "");
+  }
+
+  if (c.texto) {
+    const bloque = $("texto-campana");
+    bloque.textContent = c.texto;
+    bloque.classList.toggle("respaldo", c.estado !== "listo");
+    bloque.hidden = false;
+  }
+}
+
+function pintarEstadoCampana(campana, detalle) {
+  const { etiqueta, clase } = describirEstadoCampana(campana);
+  const chip = $("chip-campana");
+  chip.textContent = etiqueta;
+  chip.className = `chip ${clase}`;
+  $("detalle-campana").textContent = detalle;
+}
+
+function avisoCampana(tipo, titulo, detalle, tecnico) {
+  $("aviso-campana").hidden = false;
+  $("aviso-campana").className = `aviso ${tipo}`;
+  $("aviso-campana-titulo").textContent = titulo;
+  $("aviso-campana-detalle").textContent = detalle;
+  $("aviso-campana-tecnico").textContent = tecnico ?? "";
 }
 
 // ------------------------------------------------------------------ datos de apoyo (opcionales)

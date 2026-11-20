@@ -97,6 +97,20 @@ export function describirError(estado, cuerpo, servicioPorDefecto = "dominio") {
       tecnico: `${estado}: ${textoDetalle(cuerpo)}`,
     };
   }
+  if (estado === 401 || estado === 403) {
+    return {
+      titulo: "Falta la clave de API o no es válida",
+      detalle: "Escribe la clave en «Clave de API», abajo en la página, y vuelve a intentar.",
+      tecnico: `${estado}: ${textoDetalle(cuerpo)}`,
+    };
+  }
+  if (estado === 429) {
+    return {
+      titulo: "Demasiadas peticiones seguidas",
+      detalle: "El gateway limita las peticiones por segundo. Espera un momento y vuelve a intentar.",
+      tecnico: `429: ${textoDetalle(cuerpo)}`,
+    };
+  }
   if (estado === 404) {
     return {
       titulo: codigo === "ruta_no_encontrada" ? "El gateway no conoce esa ruta" : "No se encontró lo pedido",
@@ -137,6 +151,38 @@ export function normalizarPrediccion(cuerpo) {
       }))
       .sort((a, b) => a.puesto - b.puesto),
   };
+}
+
+/**
+ * Normaliza la respuesta de POST/GET /api/campanas a una sola forma.
+ * Estados del dominio: pendiente, listo, error. Si el estado es `error` pero hay texto,
+ * es el modo degradado: el worker agotó los reintentos y guardó un texto de respaldo.
+ */
+export function normalizarCampana(cuerpo) {
+  const c = cuerpo && typeof cuerpo === "object" ? (cuerpo.campana && typeof cuerpo.campana === "object" ? { ...cuerpo, ...cuerpo.campana } : cuerpo) : {};
+  const crudo = String(c.estado ?? "pendiente").toLowerCase();
+  const estado = crudo === "degradado" ? "error" : ["pendiente", "listo", "error"].includes(crudo) ? crudo : "pendiente";
+  const texto = typeof c.texto === "string" && c.texto.trim() ? c.texto.trim() : null;
+  return {
+    id: c.id ?? c.campana_id ?? c.trabajo_id ?? null,
+    estado,
+    texto,
+    degradado: estado === "error" && texto !== null,
+    motivo: c.motivo_error ?? c.motivo ?? null,
+    modelo: c.modelo_llm ?? null,
+    intentos: Number.isFinite(Number(c.intentos)) ? Number(c.intentos) : null,
+    creada: c.creada_en ?? null,
+    actualizada: c.actualizada_en ?? null,
+  };
+}
+
+/** Texto corto para la etiqueta de estado de la campaña. */
+export function describirEstadoCampana(campana) {
+  if (!campana) return { etiqueta: "Sin pedir", clase: "neutro" };
+  if (campana.estado === "listo") return { etiqueta: "Lista", clase: "ok" };
+  if (campana.degradado) return { etiqueta: "Texto de respaldo", clase: "alerta" };
+  if (campana.estado === "error") return { etiqueta: "Error", clase: "error" };
+  return { etiqueta: "Pendiente", clase: "pendiente" };
 }
 
 /** Ancho relativo (0–100) de la barra de puntaje dentro de una misma recomendación. */

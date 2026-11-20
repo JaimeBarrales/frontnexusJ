@@ -7,9 +7,9 @@
   <meta name="description" content="Pide recomendaciones de productos para un cliente de Nexus Retail.">
   <link rel="preload" href="/fuentes/archivo.woff2" as="font" type="font/woff2" crossorigin>
   <!-- El ?v= se sube en cada release para que el navegador refresque el caché. -->
-  <link rel="stylesheet" href="/css/estilos.css?v=1.1.0">
+  <link rel="stylesheet" href="/css/estilos.css?v=1.2.1">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314213A'/%3E%3Crect x='6' y='12' width='20' height='13' rx='2' fill='%23FFD43B'/%3E%3C/svg%3E">
-  <script type="module" src="/js/app.js?v=1.1.0"></script>
+  <script type="module" src="/js/app.js?v=1.2.1"></script>
 </head>
 <body>
   <header class="barra">
@@ -85,6 +85,29 @@
       </dl>
     </section>
 
+    <section class="campana" id="campana" hidden aria-labelledby="titulo-campana">
+      <div class="cabecera-campana">
+        <div>
+          <h2 id="titulo-campana">Campaña para este cliente</h2>
+          <p class="panel-nota">El texto lo redacta un LLM en segundo plano a partir de datos anonimizados (categorías, marcas y tramos de gasto). Nunca recibe nombre, correo ni RUT.</p>
+        </div>
+        <button type="button" class="boton-secundario" id="boton-campana">Generar campaña</button>
+      </div>
+
+      <div class="estado-campana" id="estado-campana" aria-live="polite">
+        <span class="chip neutro" id="chip-campana">Sin pedir</span>
+        <span class="detalle-campana" id="detalle-campana"></span>
+      </div>
+
+      <div class="aviso" id="aviso-campana" hidden>
+        <p class="aviso-titulo" id="aviso-campana-titulo"></p>
+        <p class="aviso-detalle" id="aviso-campana-detalle"></p>
+        <p class="aviso-tecnico" id="aviso-campana-tecnico"></p>
+      </div>
+
+      <blockquote class="texto-campana" id="texto-campana" hidden></blockquote>
+    </section>
+
     <section class="contexto" id="contexto" hidden aria-label="Datos del cliente">
       <article class="panel">
         <h2>Lo que ya compró</h2>
@@ -100,7 +123,13 @@
   </main>
 
   <footer class="pie">
-    <p>Todas las peticiones pasan por el gateway. Ruta de recomendación: <code id="ruta-prediccion">/api/dominio/predicciones</code></p>
+    <p>Todas las peticiones pasan por el gateway. Ruta de recomendación: <code id="ruta-prediccion">/api/dominio/predicciones</code> · Campañas: <code id="ruta-campanas">/api/campanas</code></p>
+    <form class="clave" id="form-clave" autocomplete="off">
+      <label for="clave">Clave de API <span>(opcional; queda solo en esta pestaña)</span></label>
+      <input id="clave" type="password" spellcheck="false" maxlength="200">
+      <button type="submit">Guardar</button>
+      <span class="clave-estado" id="clave-estado" aria-live="polite"></span>
+    </form>
   </footer>
 </body>
 </html>

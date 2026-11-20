@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   describirError,
+  describirEstadoCampana,
   escalarPuntajes,
   formatearFecha,
   formatearPrecio,
+  normalizarCampana,
   normalizarPrediccion,
   validarEntrada,
 } from "../public/js/formato.js";
@@ -78,4 +80,45 @@ test("escala los puntajes para dibujar las barras", () => {
   assert.deepEqual(escalarPuntajes([{ puntaje: 3 }, { puntaje: 2 }, { puntaje: 1 }]), [100, 65, 30]);
   assert.deepEqual(escalarPuntajes([{ puntaje: null }, { puntaje: null }]), [null, null]);
   assert.deepEqual(escalarPuntajes([{ puntaje: 2 }]), [100]);
+});
+
+test("401 y 429 tienen mensajes propios", () => {
+  assert.match(describirError(401, { detail: "clave invalida" }).titulo, /clave de API/);
+  assert.match(describirError(429, null).titulo, /Demasiadas peticiones/);
+});
+
+test("normaliza la campaña con los nombres de la tabla campanas", () => {
+  const c = normalizarCampana({
+    id: 3, usuario_id: "U100406", estado: "listo", texto: "  Hola  ", modelo_llm: "meta/llama-3.1-70b-instruct",
+    intentos: 1, motivo_error: null, creada_en: "2026-11-20T12:00:00Z", actualizada_en: "2026-11-20T12:00:05Z",
+  });
+  assert.equal(c.id, 3);
+  assert.equal(c.estado, "listo");
+  assert.equal(c.texto, "Hola");
+  assert.equal(c.degradado, false);
+  assert.equal(c.modelo, "meta/llama-3.1-70b-instruct");
+  assert.equal(c.intentos, 1);
+});
+
+test("acepta la respuesta 202 con otros nombres de id y estados desconocidos", () => {
+  assert.equal(normalizarCampana({ campana_id: 9 }).id, 9);
+  assert.equal(normalizarCampana({ trabajo_id: "a1", estado: "PENDIENTE" }).estado, "pendiente");
+  assert.equal(normalizarCampana({ campana: { id: 4, estado: "listo" } }).id, 4);
+  assert.equal(normalizarCampana({ id: 1, estado: "procesando" }).estado, "pendiente");
+  assert.equal(normalizarCampana(null).id, null);
+});
+
+test("error con texto es modo degradado; error sin texto no", () => {
+  const degradado = normalizarCampana({ id: 1, estado: "error", texto: "Respaldo", motivo_error: "timeout" });
+  assert.equal(degradado.degradado, true);
+  assert.equal(describirEstadoCampana(degradado).clase, "alerta");
+  assert.equal(normalizarCampana({ id: 1, estado: "degradado", texto: "R" }).estado, "error");
+
+  const sinTexto = normalizarCampana({ id: 1, estado: "error", texto: "  " });
+  assert.equal(sinTexto.degradado, false);
+  assert.equal(describirEstadoCampana(sinTexto).etiqueta, "Error");
+
+  assert.equal(describirEstadoCampana(normalizarCampana({ estado: "listo" })).clase, "ok");
+  assert.equal(describirEstadoCampana(normalizarCampana({ estado: "pendiente" })).etiqueta, "Pendiente");
+  assert.equal(describirEstadoCampana(null).etiqueta, "Sin pedir");
 });
