@@ -97,6 +97,13 @@ El front también acepta la predicción envuelta (`{"id": 42, "prediccion": {...
 
 En las tres se acepta también un objeto `{"items": [...]}`.
 
+## Despliegue en Vercel
+
+En Vercel no hay gateway: Vercel solo sirve `public/`. Por eso `vercel.json` reenvía (rewrites) `/api/*`, `/health` y `/config.json` al gateway de EC2 (`https://52-1-100-14.sslip.io`), y el navegador sigue usando rutas relativas, igual que detrás del gateway. Sin esos rewrites, el `POST` de la predicción llega al propio Vercel y responde **405 Not Allowed**.
+
+- En el proyecto de Vercel, **Root Directory** debe quedar vacío (raíz del repo): si apunta a `public/`, Vercel no lee `vercel.json`.
+- Si cambia la IP elástica de EC2, hay que actualizar las tres rutas de `vercel.json`.
+
 ## Configuración
 
 | Variable | Valor por defecto | Para qué |
