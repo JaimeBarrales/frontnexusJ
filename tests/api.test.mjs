@@ -10,8 +10,13 @@ import {
   pedir,
   pedirCampana,
   pedirPrediccion,
+  RUTAS,
 } from "../public/js/api.js";
 import { normalizarCampana } from "../public/js/formato.js";
+
+test("dashboard usa la ruta agregada del dominio", () => {
+  assert.equal(RUTAS.dashboard, "/api/dashboard");
+});
 
 function respuesta(status, cuerpo) {
   const texto = typeof cuerpo === "string" ? cuerpo : JSON.stringify(cuerpo);
