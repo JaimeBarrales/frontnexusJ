@@ -49,6 +49,8 @@ async function iniciar() {
 
   revisarSalud();
   setInterval(revisarSalud, INTERVALO_SALUD_MS);
+  cargarDashboard();
+  $("actualizar-dashboard").addEventListener("click", cargarDashboard);
   cargarClientesDeEjemplo();
 
   // Permite abrir la página con ?cliente=U100406 para la demostración.
@@ -57,6 +59,25 @@ async function iniciar() {
     $("usuario").value = cliente;
     recomendar(cliente, 8);
   }
+}
+
+async function cargarDashboard() {
+  const panel = $("metricas-dashboard");
+  panel.setAttribute("aria-busy", "true");
+  const r = await pedir(RUTAS.dashboard, { timeoutMs: 5000 });
+  panel.setAttribute("aria-busy", "false");
+  if (!r.ok || !r.cuerpo || typeof r.cuerpo !== "object") {
+    $("estado-dashboard").textContent = "Métricas no disponibles temporalmente.";
+    return;
+  }
+  const m = r.cuerpo;
+  $("m-predicciones").textContent = m.predicciones_total ?? "—";
+  $("m-modelo").textContent = m.predicciones_modelo ?? "—";
+  $("m-fallback").textContent = m.predicciones_fallback ?? "—";
+  $("m-porcentaje").textContent = `${m.porcentaje_fallback ?? 0}%`;
+  $("m-listas").textContent = m.campanas_listas ?? "—";
+  $("m-degradadas").textContent = m.campanas_degradadas ?? "—";
+  $("estado-dashboard").textContent = `Actualizado en ${r.ms} ms.`;
 }
 
 // ------------------------------------------------------------------ flujo principal

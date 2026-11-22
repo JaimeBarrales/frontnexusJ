@@ -22,6 +22,25 @@
   </header>
 
   <main>
+    <section class="dashboard" aria-labelledby="titulo-dashboard">
+      <div class="dashboard-cabecera">
+        <div>
+          <h2 id="titulo-dashboard">Resumen operativo</h2>
+          <p class="panel-nota">Recomendaciones y campañas procesadas por el sistema.</p>
+        </div>
+        <button type="button" class="dashboard-actualizar" id="actualizar-dashboard">Actualizar</button>
+      </div>
+      <div class="metricas" id="metricas-dashboard" aria-live="polite" aria-busy="true">
+        <article class="metrica"><span>Predicciones entregadas</span><strong id="m-predicciones">—</strong></article>
+        <article class="metrica"><span>Predicciones del modelo</span><strong id="m-modelo">—</strong></article>
+        <article class="metrica"><span>Respuestas fallback</span><strong id="m-fallback">—</strong></article>
+        <article class="metrica"><span>Tasa de fallback</span><strong id="m-porcentaje">—</strong></article>
+        <article class="metrica"><span>Campañas listas</span><strong id="m-listas">—</strong></article>
+        <article class="metrica"><span>Campañas degradadas</span><strong id="m-degradadas">—</strong></article>
+      </div>
+      <p class="dashboard-estado" id="estado-dashboard" role="status">Cargando métricas…</p>
+    </section>
+
     <section class="pedido" aria-labelledby="titulo">
       <h1 id="titulo">¿Qué productos le mostramos a este cliente?</h1>
       <p class="bajada">Escribe el código del cliente y elige cuántos productos quieres en la vitrina. El modelo los ordena según la probabilidad de que los compre.</p>

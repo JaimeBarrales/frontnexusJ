@@ -120,6 +120,55 @@ h1, h2, p { margin: 0; }
 [data-estado="caido"] .punto { background: var(--error); }
 [data-estado="caido"] .estado { color: var(--error); font-weight: 600; }
 
+/* ------------------------------------------------------------------ dashboard */
+
+.dashboard {
+  margin-top: 24px;
+  padding: 20px 22px;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+}
+
+.dashboard-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-cabecera h2 { font-size: 1.125rem; font-weight: 700; }
+
+.dashboard-actualizar {
+  border: 2px solid var(--tinta);
+  background: transparent;
+  color: var(--tinta);
+  border-radius: var(--radio);
+  padding: 7px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-actualizar:hover { background: var(--tinta); color: var(--papel); }
+
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metrica {
+  margin-top: 14px;
+  padding: 12px;
+  border-left: 3px solid var(--etiqueta);
+  background: #f7f9fb;
+}
+
+.metrica span { display: block; color: var(--tinta-suave); font-size: 0.75rem; }
+.metrica strong { display: block; margin-top: 4px; font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+.dashboard-estado { margin-top: 10px; color: var(--tinta-suave); font-size: 0.8125rem; }
+
 /* ------------------------------------------------------------------ pedido */
 
 .pedido {
@@ -604,6 +653,9 @@ h1 {
 @media (max-width: 620px) {
   main { padding: 0 16px 40px; }
   .barra, .pie { padding-left: 16px; padding-right: 16px; }
+  .dashboard-cabecera { flex-direction: column; }
+  .dashboard-actualizar { align-self: flex-start; }
+  .metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pedido { padding-top: 24px; }
   .formulario { flex-direction: column; align-items: stretch; }
   #usuario { width: 100%; }
