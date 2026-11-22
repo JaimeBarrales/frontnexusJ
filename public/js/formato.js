@@ -154,7 +154,7 @@ export function normalizarPrediccion(cuerpo) {
 }
 
 /**
- * Normaliza la respuesta de POST/GET /api/campanas a una sola forma.
+ * Normaliza la respuesta de POST/GET {rutaCampanas} a una sola forma.
  * Estados del dominio: pendiente, listo, error. Si el estado es `error` pero hay texto,
  * es el modo degradado: el worker agotó los reintentos y guardó un texto de respaldo.
  */
@@ -171,8 +171,8 @@ export function normalizarCampana(cuerpo) {
     motivo: c.motivo_error ?? c.motivo ?? null,
     modelo: c.modelo_llm ?? null,
     intentos: Number.isFinite(Number(c.intentos)) ? Number(c.intentos) : null,
-    creada: c.creada_en ?? null,
-    actualizada: c.actualizada_en ?? null,
+    creada: c.creado_en ?? c.creada_en ?? null,
+    actualizada: c.actualizado_en ?? c.actualizada_en ?? null,
   };
 }
 

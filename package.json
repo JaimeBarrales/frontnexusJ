@@ -1,6 +1,6 @@
 {
   "name": "nexus-front",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "description": "Front del recomendador de Nexus Retail (EP2 ITY1102). Sin dependencias: HTML, CSS y JavaScript servidos por Nginx.",
   "type": "module",

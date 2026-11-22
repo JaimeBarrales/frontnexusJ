@@ -40,7 +40,7 @@ revisar() {  # revisar <nombre> <ruta> <texto esperado en la respuesta>
 revisar "GET / entrega la página"                    "/"                    "Recomendar productos"
 revisar "GET /health responde JSON"                  "/health"              '"service":"front"'
 revisar "GET /config.json trae la ruta por defecto"  "/config.json"         '/api/dominio/predicciones'
-revisar "GET /config.json trae la ruta de campañas"  "/config.json"         '/api/campanas'
+revisar "GET /config.json trae la ruta de campañas"  "/config.json"         '/api/dominio/campanas'
 revisar "GET /js/app.js existe"                      "/js/app.js"           "pedirPrediccion"
 revisar "GET /css/estilos.css existe"                "/css/estilos.css"     "gondola"
 revisar "Una ruta desconocida vuelve al index"       "/cualquier/cosa"      "Recomendar productos"

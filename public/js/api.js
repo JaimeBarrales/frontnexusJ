@@ -4,7 +4,7 @@ const CONFIG_POR_DEFECTO = {
   // Ruta del flujo principal. El dominio llama a la IA y guarda la predicción en la base.
   rutaPrediccion: "/api/dominio/predicciones",
   // Campañas con LLM (tarea 1): POST {ruta}/{usuario} -> 202 con id; GET {ruta}/{id} -> estado.
-  rutaCampanas: "/api/campanas",
+  rutaCampanas: "/api/dominio/campanas",
 };
 
 export const RUTAS = {
