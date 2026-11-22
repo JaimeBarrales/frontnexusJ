@@ -1,4 +1,4 @@
-import { RUTAS, cargarConfig, esperarCampana, guardarClave, leerClave, pedir, pedirCampana, pedirPrediccion } from "./api.js";
+import { RUTAS, cargarConfig, esperarCampana, guardarClave, leerClave, pedir, pedirCampana, pedirPrediccion } from "./api.js?v=1.2.2";
 import {
   describirError,
   describirEstadoCampana,
@@ -8,7 +8,7 @@ import {
   normalizarCampana,
   normalizarPrediccion,
   validarEntrada,
-} from "./formato.js";
+} from "./formato.js?v=1.2.2";
 
 const $ = (id) => document.getElementById(id);
 const INTERVALO_SALUD_MS = 5000;

@@ -5,7 +5,7 @@ FROM nginx:1.30.5-alpine
 # Ruta del flujo principal. El valor por defecto pasa por el dominio, que guarda la predicción.
 ENV RUTA_PREDICCION=/api/dominio/predicciones
 # Ruta de las campañas con LLM (POST {ruta}/{usuario} y GET {ruta}/{id}).
-ENV RUTA_CAMPANAS=/api/campanas
+ENV RUTA_CAMPANAS=/api/dominio/campanas
 
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
