@@ -100,6 +100,20 @@ test("normaliza la campaña con los nombres de la tabla campanas", () => {
   assert.equal(c.intentos, 1);
 });
 
+test("lee la respuesta real de GET /campanas/{id} del dominio (creado_en, degradado)", () => {
+  const c = normalizarCampana({
+    id: 5, estado: "degradado", texto: "Descubre nuestras categorías y novedades disponibles.",
+    modelo_llm: null, intentos: 3, motivo_error: "NVIDIA no respondió",
+    creado_en: "2026-11-21T10:00:00+00:00", actualizado_en: "2026-11-21T10:00:12+00:00",
+  });
+  assert.equal(c.estado, "error");
+  assert.equal(c.degradado, true);
+  assert.equal(c.intentos, 3);
+  assert.equal(c.motivo, "NVIDIA no respondió");
+  assert.equal(c.creada, "2026-11-21T10:00:00+00:00");
+  assert.equal(c.actualizada, "2026-11-21T10:00:12+00:00");
+});
+
 test("acepta la respuesta 202 con otros nombres de id y estados desconocidos", () => {
   assert.equal(normalizarCampana({ campana_id: 9 }).id, 9);
   assert.equal(normalizarCampana({ trabajo_id: "a1", estado: "PENDIENTE" }).estado, "pendiente");

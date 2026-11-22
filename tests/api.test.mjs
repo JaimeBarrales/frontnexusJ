@@ -58,11 +58,11 @@ test("config.json reemplaza la ruta solo si es válida", async () => {
   assert.equal(caido.rutaPrediccion, "/api/dominio/predicciones");
 });
 
-test("config.json trae la ruta de campañas y si falta usa /api/campanas", async () => {
-  const conRuta = await cargarConfig(() => respuesta(200, { rutaPrediccion: "/api/predict", rutaCampanas: "/api/dominio/campanas" }));
-  assert.equal(conRuta.rutaCampanas, "/api/dominio/campanas");
+test("config.json trae la ruta de campañas y si falta usa /api/dominio/campanas", async () => {
+  const conRuta = await cargarConfig(() => respuesta(200, { rutaPrediccion: "/api/predict", rutaCampanas: "/api/campanas" }));
+  assert.equal(conRuta.rutaCampanas, "/api/campanas");
   const sinReemplazar = await cargarConfig(() => respuesta(200, { rutaCampanas: "${RUTA_CAMPANAS}" }));
-  assert.equal(sinReemplazar.rutaCampanas, "/api/campanas");
+  assert.equal(sinReemplazar.rutaCampanas, "/api/dominio/campanas");
 });
 
 // ------------------------------------------------------------------ clave de API
