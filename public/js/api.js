@@ -9,6 +9,7 @@ const CONFIG_POR_DEFECTO = {
 
 export const RUTAS = {
   saludGateway: "/health",
+  dashboard: "/api/dashboard",
   saludDominio: "/api/dominio/health",
   saludIa: "/api/ia/health",
   usuarios: (limite) => `/api/dominio/usuarios?limite=${limite}`,
